@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	easyjson "github.com/mailru/easyjson"
@@ -38,16 +39,16 @@ func FastSearch(out io.Writer) {
 		panic(err)
 	}
 
-	defer file.Close()
-
 	scanner := bufio.NewScanner(file)
 
 	seenBrowsers := make(map[string]struct{})
 	uniqueBrowsers := 0
-	foundUsers := ""
+	var foundUsers strings.Builder
 	var i int
 
 	var user User
+
+	out.Write([]byte("found users:\n" + foundUsers.String()))
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -85,13 +86,14 @@ func FastSearch(out io.Writer) {
 
 		// log.Println("Android and MSIE user:", user["name"], user["email"])
 		email := strings.Replace(user.Email, "@", " [at] ", -1)
-		foundUsers += fmt.Sprintf("[%d] %s <%s>\n", i, user.Name, email)
+		out.Write([]byte(fmt.Sprintf("[%d] %s <%s>\n", i, user.Name, email)))
 
 		i++
 	}
 
-	fmt.Fprintln(out, "found users:\n"+foundUsers)
-	fmt.Fprintln(out, "Total unique browsers", len(seenBrowsers))
+	out.Write([]byte("\nTotal unique browsers " + strconv.Itoa(len(seenBrowsers)) + "\n"))
+
+	file.Close()
 }
 
 /*===================================================================*/
