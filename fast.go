@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 
 	easyjson "github.com/mailru/easyjson"
@@ -43,15 +42,14 @@ func FastSearch(out io.Writer) {
 
 	seenBrowsers := make(map[string]struct{})
 	uniqueBrowsers := 0
-	var foundUsers strings.Builder
 	var i int
 
 	var user User
 
-	out.Write([]byte("found users:\n" + foundUsers.String()))
+	fmt.Fprintln(out, "found users:")
 
 	for scanner.Scan() {
-		line := scanner.Text()
+		line := scanner.Bytes()
 		err := user.UnmarshalJSON([]byte(line))
 		if err != nil {
 			panic(err)
@@ -86,12 +84,12 @@ func FastSearch(out io.Writer) {
 
 		// log.Println("Android and MSIE user:", user["name"], user["email"])
 		email := strings.Replace(user.Email, "@", " [at] ", -1)
-		out.Write([]byte(fmt.Sprintf("[%d] %s <%s>\n", i, user.Name, email)))
+		fmt.Fprintf(out, "[%d] %s <%s>\n", i, user.Name, email)
 
 		i++
 	}
 
-	out.Write([]byte("\nTotal unique browsers " + strconv.Itoa(len(seenBrowsers)) + "\n"))
+	fmt.Fprintf(out, "\nTotal unique browsers %d\n", len(seenBrowsers))
 
 	file.Close()
 }
